@@ -1,0 +1,96 @@
+services:
+  database:
+    container_name: database
+    image: mariadb:latest
+    restart: "no"
+    ports:
+      - "3306:3306"
+    volumes:
+      - 'aincrad-db:/var/lib/mysql'
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD", "/usr/bin/mysql", "--user=$$MYSQL_USER", "--password=$$MYSQL_ROOT_PASSWORD", "--execute", "SHOW DATABASES;"]
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    env_file:
+      - '../.env'
+    networks:
+      - aincrad
+
+  check-db-started:
+    container_name: db-healthcheck
+    image: jwilder/dockerize:0.6.1    
+    env_file:
+      - '../.env'      
+    depends_on:
+      - database          
+    command: 'dockerize -wait=tcp://database:3306 -timeout 30s'
+    networks:
+      - aincrad
+
+  canaryd:
+    container_name: canaryd
+    image: ghcr.io/tibia-oce/aincrad:latest
+    restart: always
+    ports:
+      - "7171:7171"
+      - "7172:7172"
+    networks:
+      - aincrad
+    env_file:
+      - '../.env'
+    depends_on:
+      - database
+
+  login:
+    container_name: login
+    image: opentibiabr/login-server:latest
+    restart: always
+    ports:
+      - "${LOGIN_HTTP_PORT}:${LOGIN_HTTP_PORT}"
+      - "${LOGIN_GRPC_PORT}:${LOGIN_GRPC_PORT}"
+    env_file:
+      - '../.env'
+    networks:
+      - aincrad
+    depends_on:
+      - database
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin
+    restart: always
+    env_file:
+      - '../.env'
+    environment:
+      - PMA_HOST=${MYSQL_HOST}
+      - PMA_PORT=${MYSQL_PORT}
+    networks:
+      - aincrad
+    ports:
+      - "5001:80"
+    depends_on:
+      - database
+
+  website:
+    container_name: website
+    ports:
+      - 5002:80
+    image: ghcr.io/tibia-oce/aincradwww:latest
+    restart: unless-stopped
+    env_file:
+      - '../.env'
+    networks:
+      - aincrad
+    depends_on:
+      - database
+      - phpmyadmin
+
+volumes:
+  aincrad-db:
+
+networks:
+  aincrad:
+    driver: bridge

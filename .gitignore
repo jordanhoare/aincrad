@@ -1,0 +1,48 @@
+# Visual Studio
+/.vs
+**.sln
+**.vcxproj
+**.vcxproj.user
+
+# Build Output
+/build
+/CMakeFiles
+/vcproj
+*/.vs
+
+# VCPKG Dependencies
+/vcpkg_installed
+
+# CLion and other JetBrains tools
+/.idea
+.vscode/
+.env
+
+#Some of these are related to eclipse. So i keep them out of my repo
+.cproject
+.dep/
+.project
+.settings/
+
+#files being edited
+*~
+
+# make and build files
+*.lst
+*.o
+*.eep
+*.lss
+*.map
+*.sym
+*.elf
+*.hex
+*.dll
+/vcpkg
+/bin
+/tools
+appearances.pb.h
+appearances.pb.cc
+*.tar.gz
+canaryd
+/data_backup_*
+.DS_Store
